@@ -8,12 +8,12 @@ import cartRouter from './routes/cartRouter.js';
 import viewsRouter from './routes/viewsRouter.js';
 import __dirname from './utils/constantsUtil.js';
 import websocket from './websocket.js';
-
-import config from './config/config.js'; // 👈 NUEVO
+import './config/passport.config.js';
+import config from './config/config.js'; 
 
 const app = express();
 
-// 🔁 NUEVO: Conexión a MongoDB Atlas usando la URL del .env
+
 mongoose.connect(config.MONGO_URL)
   .then(() => console.log('✅ Connected to MongoDB Atlas'))
   .catch(err => console.error('❌ MongoDB connection error:', err));
@@ -38,6 +38,7 @@ const httpServer = app.listen(PORT, () => {
   console.log(`Start server in PORT ${PORT}`);
 });
 
+app.use(passport.initialize());
 const io = new Server(httpServer);
 
 websocket(io);
