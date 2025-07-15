@@ -1,24 +1,30 @@
 <div class="box">
-    <div class="view-cart"><a id="button-cart" class="button">Ver Carrito</a></div>
+    <div class="view-cart">
+        <a href="/cart" class="button">Ver Carrito</a>
+    </div>
+
     <h1>Productos</h1>
+
     <div class="products-box">
         {{#each products}}
             <div class="product-card">
                 <h3>{{this.title}}</h3>
                 <hr>
-                <p>Categoria: {{this.category}}</p>
-                <p>Descripción: {{this.description}}</p>
-                <p>Precio: $ {{this.price}}</p>
-                <button id="button-create" onclick="addToCart('{{this._id}}')">Agregar al Carrito</button>
+                <p><strong>Categoría:</strong> {{this.category}}</p>
+                <p><strong>Descripción:</strong> {{this.description}}</p>
+                <p><strong>Precio:</strong> ${{this.price}}</p>
+                <button onclick="addToCart('{{this._id}}')">Agregar al Carrito</button>
             </div>
         {{/each}}
     </div>
+
     <div class="footer">
         {{#if prevLink.exist}}
-            <a id="button-paginate" class="button" href="{{prevLink.link}}">Anterior</a>
+            <a class="button" href="{{prevLink.link}}">Anterior</a>
         {{/if}}
+
         {{#if nextLink.exist}}
-            <a id="button-paginate" class="button" href="{{nextLink.link}}">Siguiente</a>
+            <a class="button" href="{{nextLink.link}}">Siguiente</a>
         {{/if}}
     </div>
 </div>
