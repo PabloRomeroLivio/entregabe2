@@ -1,46 +1,154 @@
 <div class="box">
     <h1>Productos</h1>
     <hr>
+
     <div class="products-form">
         <h2>Crear Producto</h2>
-        <form>
+        <form id="productForm">
             <label for="title">Título</label>
-            <input name="title" id="title" type="text">
+            <input name="title" id="title" type="text" required>
 
             <label for="description">Descripción</label>
-            <input name="description" id="description" type="text">
+            <input name="description" id="description" type="text" required>
 
             <label for="code">Código</label>
-            <input name="code" id="code" type="text">
+            <input name="code" id="code" type="text" required>
 
             <label for="price">Precio</label>
-            <input name="price" id="price" type="number">
+            <input name="price" id="price" type="number" required>
 
             <label for="stock">Stock</label>
-            <input name="stock" id="stock" type="number">
+            <input name="stock" id="stock" type="number" required>
 
             <label for="category">Categoria</label>
-            <input name="category" id="category" type="text">
+            <input name="category" id="category" type="text" required>
 
-            <button id="button-create" onclick="createProduct(event)">Crear</button>
+            <button id="button-create" type="submit">Crear</button>
         </form>
     </div>
 
     <hr>
 
-    <div class="products-box">
+    <div class="products-box" id="productsContainer">
         {{#each products}}
-            <div class="product-card">
+            <div class="product-card" data-id="{{this._id}}">
                 <h3>{{this.title}}</h3>
                 <hr>
                 <p>Categoria: {{this.category}}</p>
                 <p>Descripción: {{this.description}}</p>
                 <p>Precio: $ {{this.price}}</p>
-                <button id="button-delete" onclick="deleteProduct('{{this._id}}')">Eliminar</button>
+                <button class="button-delete" data-id="{{this._id}}">Eliminar</button>
+                <button class="button-add-to-cart" data-id="{{this._id}}">Añadir al carrito</button>
             </div>
         {{/each}}
     </div>
 </div>
 
 <script src="/socket.io/socket.io.js"></script>
-<script src="/js/index.js"></script>
+<script>
+    const socket = io();
+
+    // Crear producto
+    document.getElementById('productForm').addEventListener('submit', e => {
+        e.preventDefault();
+
+        const data = {
+            title: e.target.title.value,
+            description: e.target.description.value,
+            code: e.target.code.value,
+            price: Number(e.target.price.value),
+            stock: Number(e.target.stock.value),
+            category: e.target.category.value
+        };
+
+        socket.emit('createProduct', data);
+        e.target.reset();
+    });
+
+    // Escuchar la lista actualizada de productos y renderizar
+    socket.on('publishProducts', (products) => {
+        const container = document.getElementById('productsContainer');
+        container.innerHTML = '';
+        products.forEach(product => {
+            const productDiv = document.createElement('div');
+            productDiv.classList.add('product-card');
+            productDiv.dataset.id = product._id;
+            productDiv.innerHTML = `
+                <h3>${product.title}</h3>
+                <hr>
+                <p>Categoria: ${product.category}</p>
+                <p>Descripción: ${product.description}</p>
+                <p>Precio: $ ${product.price}</p>
+                <button class="button-delete" data-id="${product._id}">Eliminar</button>
+                <button class="button-add-to-cart" data-id="${product._id}">Añadir al carrito</button>
+            `;
+            container.appendChild(productDiv);
+        });
+        attachButtonsListeners();
+    });
+
+    // Eliminar producto
+    function deleteProduct(pid) {
+        socket.emit('deleteProduct', { pid });
+    }
+
+    // Adjuntar eventos a botones (eliminar y añadir al carrito)
+    function attachButtonsListeners() {
+        document.querySelectorAll('.button-delete').forEach(button => {
+            button.onclick = () => deleteProduct(button.dataset.id);
+        });
+        document.querySelectorAll('.button-add-to-cart').forEach(button => {
+            button.onclick = () => addToCart(button.dataset.id);
+        });
+    }
+
+    // Inicializar eventos en la carga
+    attachButtonsListeners();
+
+    // Código para el carrito (usando localStorage)
+    function showButtonCart() {
+        const cartId = localStorage.getItem('cartId');
+        const viewCart = document.querySelector('.view-cart');
+        const buttonCart = document.querySelector('#button-cart');
+
+        if (cartId) {
+            if (buttonCart) buttonCart.setAttribute("href", `/cart/${cartId}`);
+            if (viewCart) viewCart.style.display = "block";
+        } else {
+            if (viewCart) viewCart.style.display = "none";
+        }
+    }
+
+    async function addToCart(pid) {
+        try {
+            let cartId = localStorage.getItem('cartId');
+
+            if (!cartId) {
+                const response = await fetch('/api/carts', { method: 'POST' });
+                const data = await response.json();
+
+                if (data.status === 'error') {
+                    return alert(data.message);
+                }
+
+                cartId = data.payload._id;
+                localStorage.setItem('cartId', cartId);
+            }
+
+            const responseAdd = await fetch(`/api/carts/${cartId}/product/${pid}`, { method: 'POST' });
+            const resultAdd = await responseAdd.json();
+
+            if (resultAdd.status === 'error') {
+                return alert(resultAdd.message);
+            }
+
+            showButtonCart();
+            alert('Producto añadido satisfactoriamente!');
+        } catch (error) {
+            console.error('Error en addToCart:', error);
+            alert('Error inesperado al añadir producto.');
+        }
+    }
+
+    showButtonCart();
+</script>
