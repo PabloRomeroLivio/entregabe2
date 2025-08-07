@@ -20,7 +20,7 @@
             <label for="stock">Stock</label>
             <input name="stock" id="stock" type="number" required>
 
-            <label for="category">Categoria</label>
+            <label for="category">Categoría</label>
             <input name="category" id="category" type="text" required>
 
             <button id="button-create" type="submit">Crear</button>
@@ -34,7 +34,7 @@
             <div class="product-card" data-id="{{this._id}}">
                 <h3>{{this.title}}</h3>
                 <hr>
-                <p>Categoria: {{this.category}}</p>
+                <p>Categoría: {{this.category}}</p>
                 <p>Descripción: {{this.description}}</p>
                 <p>Precio: $ {{this.price}}</p>
                 <button class="button-delete" data-id="{{this._id}}">Eliminar</button>
@@ -49,23 +49,33 @@
     const socket = io();
 
     // Crear producto
-    document.getElementById('productForm').addEventListener('submit', e => {
+    document.getElementById('productForm').addEventListener('submit', async e => {
         e.preventDefault();
+        const button = document.getElementById('button-create');
+        button.disabled = true;
 
-        const data = {
-            title: e.target.title.value,
-            description: e.target.description.value,
-            code: e.target.code.value,
-            price: Number(e.target.price.value),
-            stock: Number(e.target.stock.value),
-            category: e.target.category.value
-        };
+        const title = e.target.title.value;
+        const description = e.target.description.value;
+        const code = e.target.code.value;
+        const price = Number(e.target.price.value);
+        const stock = Number(e.target.stock.value);
+        const category = e.target.category.value;
 
+        // Validación básica
+        if (price <= 0 || stock < 0) {
+            alert('El precio debe ser mayor a 0 y el stock no puede ser negativo.');
+            button.disabled = false;
+            return;
+        }
+
+        const data = { title, description, code, price, stock, category };
         socket.emit('createProduct', data);
+
         e.target.reset();
+        button.disabled = false;
     });
 
-    // Escuchar la lista actualizada de productos y renderizar
+    // Escuchar productos actualizados
     socket.on('publishProducts', (products) => {
         const container = document.getElementById('productsContainer');
         container.innerHTML = '';
@@ -76,7 +86,7 @@
             productDiv.innerHTML = `
                 <h3>${product.title}</h3>
                 <hr>
-                <p>Categoria: ${product.category}</p>
+                <p>Categoría: ${product.category}</p>
                 <p>Descripción: ${product.description}</p>
                 <p>Precio: $ ${product.price}</p>
                 <button class="button-delete" data-id="${product._id}">Eliminar</button>
@@ -92,7 +102,7 @@
         socket.emit('deleteProduct', { pid });
     }
 
-    // Adjuntar eventos a botones (eliminar y añadir al carrito)
+    // Adjuntar listeners a botones
     function attachButtonsListeners() {
         document.querySelectorAll('.button-delete').forEach(button => {
             button.onclick = () => deleteProduct(button.dataset.id);
@@ -102,10 +112,9 @@
         });
     }
 
-    // Inicializar eventos en la carga
     attachButtonsListeners();
 
-    // Código para el carrito (usando localStorage)
+    // Mostrar botón carrito si existe en localStorage
     function showButtonCart() {
         const cartId = localStorage.getItem('cartId');
         const viewCart = document.querySelector('.view-cart');
@@ -119,6 +128,7 @@
         }
     }
 
+    // Añadir producto al carrito
     async function addToCart(pid) {
         try {
             let cartId = localStorage.getItem('cartId');

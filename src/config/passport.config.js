@@ -2,9 +2,18 @@ import passport from 'passport';
 import { Strategy as JWTStrategy, ExtractJwt } from 'passport-jwt';
 import { userModel } from '../dao/models/user.model.js';
 import config from '../config/config.js'; 
+import cookieParser from 'cookie-parser';
 
 const jwtOptions = {
-  jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+  jwtFromRequest: ExtractJwt.fromExtractors([
+  (req) => {
+    let token = null;
+    if (req && req.cookies) {
+      token = req.cookies['jwtCookie'];
+    }
+    return token;
+  },
+]),
   secretOrKey: config.JWT_SECRET,
 };
 
