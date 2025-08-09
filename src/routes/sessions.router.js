@@ -1,51 +1,26 @@
 import { Router } from 'express';
 import jwt from 'jsonwebtoken';
-import { userModel } from '../dao/models/user.model.js';
-import { cartModel } from '../dao/models/cartModel.js';
-import { createHash, isValidPassword } from '../utils/crypto.js';
-import config from '../config/config.js';
 import passport from 'passport';
+
+import config from '../config/config.js';
+import UserService from '../services/UserService.js';
 import UserDTO from '../dao/DTOs/UserDTO.js';
 
 const router = Router();
+const userService = new UserService();
 
-// REGISTRO CON CREACIÓN DE CARRITO
+// REGISTER
 router.post('/register', async (req, res) => {
   try {
-    const { first_name, last_name, email, age, password } = req.body;
-
-    if (!first_name || !last_name || !email || !age || !password) {
-      return res.status(400).json({ status: 'error', message: 'All fields are required' });
-    }
-
-    const exist = await userModel.findOne({ email });
-    if (exist) {
-      return res.status(400).json({ status: 'error', message: 'User already exists' });
-    }
-
-    // Crear carrito vacío
-    const newCart = await cartModel.create({ products: [] });
-
-    const newUser = {
-      first_name,
-      last_name,
-      email,
-      age,
-      password: createHash(password),
-      cart: newCart._id,
-      role: email === config.ADMIN_EMAIL ? 'admin' : 'user', // rol admin si email es admin
-    };
-
-    const result = await userModel.create(newUser);
-    const { password: _, ...userWithoutPassword } = result.toObject();
-
+    const user = await userService.register(req.body);
+    const { password, ...userWithoutPassword } = user.toObject();
     res.status(201).json({ status: 'success', payload: userWithoutPassword });
   } catch (error) {
-    res.status(500).json({ status: 'error', message: error.message });
+    res.status(400).json({ status: 'error', message: error.message });
   }
 });
 
-// LOGIN - genera JWT
+// LOGIN con JWT guardado en cookie httpOnly
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -54,38 +29,44 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ status: 'error', message: 'Email and password are required' });
     }
 
-    const user = await userModel.findOne({ email });
+    const user = await userService.login(email, password);
 
-    if (!user || !isValidPassword(user, password)) {
-      return res.status(401).json({ status: 'error', message: 'Invalid credentials' });
-    }
-
-    // Generar token con id y role
     const token = jwt.sign(
       { id: user._id, role: user.role, email: user.email },
       config.JWT_SECRET,
       { expiresIn: '1h' }
     );
 
-    res.status(200).json({ status: 'success', token });
+    // Guardar token en cookie httpOnly
+    res
+      .cookie('jwt', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 60 * 60 * 1000 // 1 hora
+      })
+      .status(200)
+      .json({ status: 'success', message: 'Login successful' });
+
   } catch (error) {
-    res.status(500).json({ status: 'error', message: error.message });
+    res.status(401).json({ status: 'error', message: error.message });
   }
 });
 
-// USER ACTUAL - protegido con JWT y Passport
+// CURRENT protegido con JWT en cookie
 router.get(
   '/current',
   passport.authenticate('jwt', { session: false }),
   (req, res) => {
     const safeUser = new UserDTO(req.user);
-    res.json({ status: 'success', user: safeUser });
+    res.status(200).json({ status: 'success', user: safeUser });
   }
 );
 
-// LOGOUT - simple endpoint para cliente, no destruye token
+// LOGOUT
 router.post('/logout', (req, res) => {
-  res.json({ status: 'success', message: 'Logged out' });
+  res.clearCookie('jwt', { httpOnly: true, sameSite: 'strict' });
+  res.status(200).json({ status: 'success', message: 'Logged out' });
 });
 
 export default router;

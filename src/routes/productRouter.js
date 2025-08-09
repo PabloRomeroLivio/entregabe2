@@ -1,16 +1,16 @@
 import { Router } from 'express';
-import { productDBManager } from '../dao/productDBManager.js';
+import { ProductRepository } from '../dao/repositories/productRepository.js'; // <-- Importamos el repository
 import { uploader } from '../utils/multerUtil.js';
 import { authMiddleware, authorizeRoles } from '../middlewares/auth.js';
 
 const router = Router();
-const ProductService = new productDBManager();
+const productRepo = new ProductRepository();  // <-- Instanciamos el repository
 
 // 🔓 Rutas públicas
 
 router.get('/', async (req, res) => {
   try {
-    const result = await ProductService.getAllProducts(req.query);
+    const result = await productRepo.getAllProducts(req.query);
     res.send({ status: 'success', payload: result });
   } catch (error) {
     res.status(500).send({ status: 'error', message: error.message });
@@ -19,7 +19,7 @@ router.get('/', async (req, res) => {
 
 router.get('/:pid', async (req, res) => {
   try {
-    const result = await ProductService.getProductByID(req.params.pid);
+    const result = await productRepo.getProductByID(req.params.pid);
     res.send({ status: 'success', payload: result });
   } catch (error) {
     res.status(400).send({ status: 'error', message: error.message });
@@ -39,7 +39,7 @@ router.post(
         req.body.thumbnails = req.files.map(file => file.path);
       }
 
-      const result = await ProductService.createProduct(req.body);
+      const result = await productRepo.createProduct(req.body);
       res.send({ status: 'success', payload: result });
     } catch (error) {
       res.status(400).send({ status: 'error', message: error.message });
@@ -58,7 +58,7 @@ router.put(
         req.body.thumbnails = req.files.map(file => file.path);
       }
 
-      const result = await ProductService.updateProduct(req.params.pid, req.body);
+      const result = await productRepo.updateProduct(req.params.pid, req.body);
       res.send({ status: 'success', payload: result });
     } catch (error) {
       res.status(400).send({ status: 'error', message: error.message });
@@ -72,7 +72,7 @@ router.delete(
   authorizeRoles('admin'),
   async (req, res) => {
     try {
-      const result = await ProductService.deleteProduct(req.params.pid);
+      const result = await productRepo.deleteProduct(req.params.pid);
       res.send({ status: 'success', payload: result });
     } catch (error) {
       res.status(400).send({ status: 'error', message: error.message });

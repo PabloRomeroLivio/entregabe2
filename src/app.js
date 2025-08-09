@@ -5,6 +5,7 @@ import mongoose from 'mongoose';
 import passport from 'passport';
 import dotenv from 'dotenv';
 import path from 'path';
+import cookieParser from 'cookie-parser';
 
 import productRouter from './routes/productRouter.js';
 import cartRouter from './routes/cartRouter.js';
@@ -14,10 +15,10 @@ import sessionRouter from './routes/sessions.router.js';
 import websocket from './websocket.js';
 import __dirname from './utils/constantsUtil.js';
 import config from './config/config.js';
-import './config/passport.config.js'; // Configura estrategias de Passport
-import cookieParser from 'cookie-parser'
+import './config/passport.config.js'; // Estrategias de Passport
 
 dotenv.config();
+
 
 const app = express();
 
@@ -28,21 +29,22 @@ mongoose.connect(config.MONGO_URL)
 
 // Configuración de Handlebars
 app.engine('handlebars', handlebars.engine());
-app.set('views', path.join(__dirname, 'views')); // corregido path
+app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'handlebars');
 
 // Middlewares
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, '..', 'public')));
+app.use(cookieParser()); // antes que passport
 app.use(passport.initialize());
-app.use(cookieParser());
 
+// Archivos estáticos
+app.use(express.static(path.join(__dirname, '..', 'public')));
 
 // Rutas
 app.use('/api/products', productRouter);
 app.use('/api/carts', cartRouter);
-app.use('/api/sessions', sessionRouter);
+app.use('/api/sessions', sessionRouter); // aquí estará el login y register
 app.use('/', viewsRouter);
 
 // Inicialización del servidor
