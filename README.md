@@ -1,75 +1,130 @@
+Proyecto Backend Avanzado - Ecommerce
+Descripción
 
-Proyecto Backend - Entrega JWT + Usuario + Login
+Este proyecto es un backend para un sistema de ecommerce desarrollado con Node.js, Express y MongoDB. Permite gestionar usuarios, productos y carritos, e incluye autenticación y autorización mediante JWT. También incorpora un sistema de recuperación de contraseña mediante tokens con expiración.
+Tecnologías usadas
 
-Este proyecto corresponde a la entrega del módulo de Autenticación y Autorización con JWT del curso Programación Backend Avanzado.
-📦 Funcionalidades implementadas
-✅ Modelo de Usuario
+    Node.js
 
-    Modelo User con los campos requeridos: first_name, last_name, email, age, password, role.
+    Express.js
 
-    Contraseñas encriptadas con bcrypt.hashSync.
+    MongoDB y Mongoose
 
-    Campo role con valor por defecto "user" (puede ser "admin" para usuarios especiales).
+    Passport.js (estrategia JWT)
 
-✅ Autenticación y Autorización
+    JSON Web Tokens (JWT)
 
-    Login con validación de credenciales.
+    Bcrypt para hashing de contraseñas
 
-    Generación de Token JWT al iniciar sesión.
+    Cookies HttpOnly para almacenar el JWT
 
-    Middleware de Passport configurado para proteger rutas con JWT.
+    dotenv para variables de entorno
 
-    Estrategia personalizada "current" para extraer el usuario autenticado.
+Instalación y configuración
 
-✅ Endpoints clave
+    Clonar el repositorio:
 
-    POST /api/sessions/login: Inicia sesión y devuelve un token JWT.
+git clone https://github.com/tu_usuario/tu_repositorio.git
+cd tu_repositorio
 
-    GET /api/sessions/current: Devuelve los datos del usuario autenticado (requiere JWT en el header).
+    Instalar dependencias:
 
-✅ Rutas de Productos y Carritos
+npm install
 
-    CRUD completo para productos.
+    Crear archivo .env en la raíz con las variables:
 
-    CRUD completo para carritos.
 
-    Relación entre productos y carritos usando Mongoose.
 
-🧪 Cómo probar el sistema
+PORT=8080
+MONGO_URL=mongodb+srv://pabloromerolivio:coderPass123@cluster0.c3hwozk.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+JWT_SECRET=claveSuperSecreta123
+ADMIN_EMAIL=pablo.romero.livio@gmail.com
+JWT_EXPIRES_IN=1h
+NODE_ENV=development
+PORT=8080
 
-    ⚠️ No hay frontend para registro ni login, las pruebas se hacen con Postman o herramienta similar.
+    Iniciar el servidor:
 
-1. Usuario de prueba
+npm run start
 
-Se creó un usuario de prueba con los siguientes datos:
+Estructura del proyecto
 
-Email: usuario@prueba.com
-Contraseña: 123456
-Role: user
+src/
+├── config/               # Configuración general (Passport, variables, etc)
+├── dao/                  # Modelos y acceso a datos (repositorios)
+│   ├── models/           # Modelos Mongoose (User, Product, Cart, PasswordResetToken)
+│   ├── repositories/     # Repositorios para acceder a los modelos
+├── services/             # Lógica de negocio (UserService, ProductService, etc)
+├── routes/               # Definición de rutas (userRouter, passwordResetRouter, etc)
+├── middlewares/          # Middlewares de autenticación y autorización
+├── utils/                # Utilidades (crypto, JWT helpers, etc)
+app.js                   # Configuración principal de Express
 
-2. Iniciar sesión (Login)
+Funcionalidades principales
+Usuarios
 
-    Método: POST
+    Registro de usuarios con validación y creación automática de carrito
 
-    URL: http://localhost:8080/api/sessions/login
+    Login con JWT guardado en cookie HttpOnly
 
-    Body (JSON):
+    Logout que elimina la cookie
+
+    Endpoint para obtener datos del usuario autenticado (/current)
+
+    Middleware para proteger rutas y autorizar por roles
+
+Recuperación de contraseña
+
+    Endpoint para solicitar recuperación de contraseña: /api/password-reset/request-reset-password
+
+    Genera un token único y con expiración (1 hora) guardado en base de datos
+
+    Endpoint para resetear contraseña usando token: /api/password-reset/reset-password
+
+    Valida token, verifica expiración y actualiza la contraseña hasheada
+
+Productos y carritos
+
+    CRUD de productos y carritos (según la consigna del proyecto)
+
+Endpoints clave
+Método	Ruta	Descripción	Protección
+POST	/api/sessions/register	Registrar nuevo usuario	Pública
+POST	/api/sessions/login	Login y obtener JWT en cookie httpOnly	Pública
+POST	/api/sessions/logout	Logout y eliminar cookie	Autenticado
+GET	/api/sessions/current	Obtener info del usuario autenticado	Autenticado
+POST	/api/password-reset/request-reset-password	Solicitar token para recuperar contraseña	Pública
+POST	/api/password-reset/reset-password	Resetear contraseña con token válido	Pública
+Uso
+
+Para probar los endpoints de recuperación de contraseña, podés usar Postman:
+
+    Enviar POST /api/password-reset/request-reset-password con JSON:
 
 {
-  "email": "usuario@prueba.com",
-  "password": "123456"
+  "email": "usuario@ejemplo.com"
 }
 
-    Respuesta exitosa devuelve un token JWT.
+Recibirás un token en la respuesta (para esta entrega, lo devolvemos directamente).
 
-3. Consultar usuario actual
+    Enviar POST /api/password-reset/reset-password con JSON:
 
-    Método: GET
+{
+  "token": "token_recibido",
+  "newPassword": "nueva_contraseña_segura"
+}
 
-    URL: http://localhost:8080/api/sessions/current
+Si el token es válido y no expiró, la contraseña se actualizará.
+Notas
 
-    Headers:
+    La expiración del token para reset de contraseña está configurada en 1 hora.
 
-Authorization: Bearer <token_JWT_obtenido_en_login>
+    Para producción se recomienda enviar el token por email (no implementado en esta entrega).
 
-    Respuesta: datos del usuario autenticado.
+    Las contraseñas se almacenan hasheadas con bcrypt.
+
+    La autenticación se realiza con JWT almacenado en cookie HttpOnly para mayor seguridad.
+
+Autor
+
+Pablo Romero Livio

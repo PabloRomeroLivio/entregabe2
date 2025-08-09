@@ -1,27 +1,26 @@
 const socket = io();
 
-// Escuchar lista actualizada desde el servidor
+
 socket.on('publishProducts', (products) => {
   renderProducts(products);
 });
 
-// Mostrar errores si ocurren
 socket.on('statusError', (message) => {
   alert('Error: ' + message);
 });
 
-// Renderizar productos en el DOM
+
 function renderProducts(products) {
   const container = document.getElementById('productsContainer');
   if (!container) return;
 
-  container.innerHTML = ''; // Limpiar contenedor antes de re-renderizar
+  container.innerHTML = '';
 
   products.forEach(product => {
     const div = document.createElement('div');
     div.classList.add('product-item');
 
-    // Evitar inyecciones HTML usando createElement
+    
     const titleEl = document.createElement('h3');
     titleEl.textContent = product.title;
 
@@ -44,7 +43,6 @@ function renderProducts(products) {
   });
 }
 
-// Crear un nuevo producto desde el formulario
 async function createProduct() {
   const titleInput = document.getElementById('titleInput');
   const priceInput = document.getElementById('priceInput');
@@ -61,20 +59,18 @@ async function createProduct() {
   const newProduct = { title, price, category };
   socket.emit('createProduct', newProduct);
 
-  // Limpiar formulario
+
   titleInput.value = '';
   priceInput.value = '';
   categoryInput.value = '';
 }
 
-// Eliminar producto por ID
 function deleteProduct(pid) {
   if (confirm('¿Estás seguro de eliminar este producto?')) {
     socket.emit('deleteProduct', { pid });
   }
 }
 
-// Cargar productos actuales desde REST API (fallback por si WebSocket falla)
 async function loadInitialProducts() {
   try {
     const res = await fetch('/api/products');
@@ -92,5 +88,5 @@ async function loadInitialProducts() {
   }
 }
 
-// Ejecutar al cargar la página
+
 loadInitialProducts();

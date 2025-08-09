@@ -1,16 +1,12 @@
 import passport from 'passport';
 
-/**
- * Middleware de autenticación.
- * Verifica que el usuario tenga un JWT válido.
- * Se basa en la estrategia 'jwt' configurada en passport.config.js
- */
+
 export const authMiddleware = passport.authenticate('jwt', { session: false });
 
 /**
- * Middleware de autorización por roles.
- * Permite acceso solo a usuarios con ciertos roles (admin, user, premium, etc.).
- * @param  {...string} allowedRoles - Lista de roles autorizados
+ * 
+ * 
+ * @param  {...string} allowedRoles - 
  */
 export const authorizeRoles = (...allowedRoles) => {
   return (req, res, next) => {

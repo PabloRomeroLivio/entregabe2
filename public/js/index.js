@@ -4,13 +4,13 @@ function $(selector) {
     return document.querySelector(selector);
 }
 
-// Recibe errores del servidor y los muestra
+
 socket.on('statusError', data => {
     console.error(data);
     alert(`❌ Error: ${data}`);
 });
 
-// Recibe la lista de productos actualizada y la renderiza
+
 socket.on('publishProducts', data => {
     const container = $('.products-box');
     container.innerHTML = '';
@@ -37,7 +37,7 @@ socket.on('publishProducts', data => {
     container.innerHTML = html;
 });
 
-// Crea un nuevo producto
+
 function createProduct(event) {
     event.preventDefault();
 
@@ -50,7 +50,7 @@ function createProduct(event) {
         category: $('#category').value.trim()
     };
 
-    // Validaciones básicas
+   
     if (!newProduct.title || !newProduct.description || !newProduct.code || isNaN(newProduct.price) || isNaN(newProduct.stock) || !newProduct.category) {
         alert('⚠️ Todos los campos son obligatorios y deben tener valores válidos.');
         return;
@@ -60,14 +60,14 @@ function createProduct(event) {
     socket.emit('createProduct', newProduct);
 }
 
-// Elimina un producto por ID
+
 function deleteProduct(pid) {
     if (confirm('¿Estás seguro de que deseas eliminar este producto?')) {
         socket.emit('deleteProduct', { pid });
     }
 }
 
-// Limpia el formulario luego de crear un producto
+
 function cleanForm() {
     $('#title').value = '';
     $('#description').value = '';

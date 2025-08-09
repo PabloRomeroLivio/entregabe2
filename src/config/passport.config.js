@@ -3,7 +3,6 @@ import { Strategy as JWTStrategy, ExtractJwt } from 'passport-jwt';
 import { userModel } from '../dao/models/user.model.js';
 import config from './config.js';
 
-// Extraer token desde cookie
 const cookieExtractor = (req) => {
   let token = null;
   if (req && req.cookies) {

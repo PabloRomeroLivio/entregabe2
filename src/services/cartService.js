@@ -1,7 +1,6 @@
 import { cartModel } from '../dao/models/cartModel.js';
 import { productDBManager } from '../dao/productDBManager.js';
-import ticketModel from '../dao/models/ticketModel.js'; // Import default según ticketModel.js
-
+import ticketModel from '../dao/models/ticketModel.js'; 
 class CartService {
   constructor() {
     this.productService = new productDBManager();
@@ -101,7 +100,7 @@ class CartService {
     return await this.getProductsFromCartByID(cid);
   }
 
-  // Método para concretar la compra
+
   async purchaseCart(cid, buyerId) {
     const cart = await cartModel.findById(cid).populate('products.product');
     if (!cart) throw new Error(`El carrito ${cid} no existe!`);
@@ -130,7 +129,7 @@ class CartService {
       0
     );
 
-    // Creo el ticket con las propiedades que definiste en ticketModel.js
+   
     const ticket = await ticketModel.create({
       buyer: buyerId,
       products: productsPurchased.map(item => ({
@@ -142,7 +141,7 @@ class CartService {
       purchase_datetime: new Date()
     });
 
-    // Actualizo el carrito con los productos que no se compraron (sin stock suficiente)
+    
     cart.products = productsOutOfStock;
     await cart.save();
 

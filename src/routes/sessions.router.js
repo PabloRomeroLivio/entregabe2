@@ -9,7 +9,6 @@ import UserDTO from '../dao/DTOs/UserDTO.js';
 const router = Router();
 const userService = new UserService();
 
-// REGISTER
 router.post('/register', async (req, res) => {
   try {
     const user = await userService.register(req.body);
@@ -20,7 +19,7 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// LOGIN con JWT guardado en cookie httpOnly
+
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -37,13 +36,13 @@ router.post('/login', async (req, res) => {
       { expiresIn: '1h' }
     );
 
-    // Guardar token en cookie httpOnly
+   
     res
       .cookie('jwt', token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
-        maxAge: 60 * 60 * 1000 // 1 hora
+        maxAge: 60 * 60 * 1000 
       })
       .status(200)
       .json({ status: 'success', message: 'Login successful' });
@@ -53,7 +52,6 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// CURRENT protegido con JWT en cookie
 router.get(
   '/current',
   passport.authenticate('jwt', { session: false }),
@@ -63,7 +61,7 @@ router.get(
   }
 );
 
-// LOGOUT
+
 router.post('/logout', (req, res) => {
   res.clearCookie('jwt', { httpOnly: true, sameSite: 'strict' });
   res.status(200).json({ status: 'success', message: 'Logged out' });

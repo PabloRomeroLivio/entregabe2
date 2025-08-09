@@ -48,7 +48,7 @@
 <script>
     const socket = io();
 
-    // Crear producto
+    
     document.getElementById('productForm').addEventListener('submit', async e => {
         e.preventDefault();
         const button = document.getElementById('button-create');
@@ -61,7 +61,7 @@
         const stock = Number(e.target.stock.value);
         const category = e.target.category.value;
 
-        // Validación básica
+      
         if (price <= 0 || stock < 0) {
             alert('El precio debe ser mayor a 0 y el stock no puede ser negativo.');
             button.disabled = false;
@@ -75,7 +75,7 @@
         button.disabled = false;
     });
 
-    // Escuchar productos actualizados
+    
     socket.on('publishProducts', (products) => {
         const container = document.getElementById('productsContainer');
         container.innerHTML = '';
@@ -97,12 +97,12 @@
         attachButtonsListeners();
     });
 
-    // Eliminar producto
+    
     function deleteProduct(pid) {
         socket.emit('deleteProduct', { pid });
     }
 
-    // Adjuntar listeners a botones
+   
     function attachButtonsListeners() {
         document.querySelectorAll('.button-delete').forEach(button => {
             button.onclick = () => deleteProduct(button.dataset.id);
@@ -114,7 +114,7 @@
 
     attachButtonsListeners();
 
-    // Mostrar botón carrito si existe en localStorage
+    
     function showButtonCart() {
         const cartId = localStorage.getItem('cartId');
         const viewCart = document.querySelector('.view-cart');
@@ -128,7 +128,7 @@
         }
     }
 
-    // Añadir producto al carrito
+    
     async function addToCart(pid) {
         try {
             let cartId = localStorage.getItem('cartId');

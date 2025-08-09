@@ -1,83 +1,58 @@
 import { Router } from 'express';
-import { ProductRepository } from '../dao/repositories/productRepository.js'; // <-- Importamos el repository
-import { uploader } from '../utils/multerUtil.js';
+import ProductService from '../services/ProductService.js';
 import { authMiddleware, authorizeRoles } from '../middlewares/auth.js';
 
 const router = Router();
-const productRepo = new ProductRepository();  // <-- Instanciamos el repository
+const productService = new ProductService();
 
-// 🔓 Rutas públicas
 
 router.get('/', async (req, res) => {
   try {
-    const result = await productRepo.getAllProducts(req.query);
-    res.send({ status: 'success', payload: result });
+    const products = await productService.getAll(req.query);
+    res.json({ status: 'success', payload: products });
   } catch (error) {
-    res.status(500).send({ status: 'error', message: error.message });
+    res.status(400).json({ status: 'error', message: error.message });
   }
 });
 
 router.get('/:pid', async (req, res) => {
   try {
-    const result = await productRepo.getProductByID(req.params.pid);
-    res.send({ status: 'success', payload: result });
+    const product = await productService.getById(req.params.pid);
+    if (!product) return res.status(404).json({ status: 'error', message: 'Producto no encontrado' });
+    res.json({ status: 'success', payload: product });
   } catch (error) {
-    res.status(400).send({ status: 'error', message: error.message });
+    res.status(400).json({ status: 'error', message: error.message });
   }
 });
 
-// 🔐 Rutas protegidas SOLO para admin
 
-router.post(
-  '/',
-  authMiddleware,
-  authorizeRoles('admin'),
-  uploader.array('thumbnails', 3),
-  async (req, res) => {
-    try {
-      if (req.files) {
-        req.body.thumbnails = req.files.map(file => file.path);
-      }
+router.use(authMiddleware, authorizeRoles('admin'));
 
-      const result = await productRepo.createProduct(req.body);
-      res.send({ status: 'success', payload: result });
-    } catch (error) {
-      res.status(400).send({ status: 'error', message: error.message });
-    }
+router.post('/', async (req, res) => {
+  try {
+    const newProduct = await productService.create(req.body);
+    res.status(201).json({ status: 'success', payload: newProduct });
+  } catch (error) {
+    res.status(400).json({ status: 'error', message: error.message });
   }
-);
+});
 
-router.put(
-  '/:pid',
-  authMiddleware,
-  authorizeRoles('admin'),
-  uploader.array('thumbnails', 3),
-  async (req, res) => {
-    try {
-      if (req.files) {
-        req.body.thumbnails = req.files.map(file => file.path);
-      }
-
-      const result = await productRepo.updateProduct(req.params.pid, req.body);
-      res.send({ status: 'success', payload: result });
-    } catch (error) {
-      res.status(400).send({ status: 'error', message: error.message });
-    }
+router.put('/:pid', async (req, res) => {
+  try {
+    const updatedProduct = await productService.update(req.params.pid, req.body);
+    res.json({ status: 'success', payload: updatedProduct });
+  } catch (error) {
+    res.status(400).json({ status: 'error', message: error.message });
   }
-);
+});
 
-router.delete(
-  '/:pid',
-  authMiddleware,
-  authorizeRoles('admin'),
-  async (req, res) => {
-    try {
-      const result = await productRepo.deleteProduct(req.params.pid);
-      res.send({ status: 'success', payload: result });
-    } catch (error) {
-      res.status(400).send({ status: 'error', message: error.message });
-    }
+router.delete('/:pid', async (req, res) => {
+  try {
+    await productService.delete(req.params.pid);
+    res.json({ status: 'success', message: 'Producto eliminado correctamente' });
+  } catch (error) {
+    res.status(400).json({ status: 'error', message: error.message });
   }
-);
+});
 
 export default router;

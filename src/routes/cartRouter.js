@@ -5,19 +5,19 @@ import { authMiddleware, authorizeRoles } from '../middlewares/auth.js';
 const router = Router();
 const cartService = new CartService();
 
-// Todas las rutas requieren usuario autenticado y rol user o admin
+
 router.use(authMiddleware, authorizeRoles('user', 'admin'));
 
-// Middleware para validar que el carrito corresponde al usuario (si no es admin)
+
 function checkCartOwnership(req, res, next) {
-  const user = req.user; // seteado por passport o JWT
+  const user = req.user; 
   const cartId = req.params.cid;
 
   if (user.role === 'admin') {
-    return next(); // admin puede acceder a cualquier carrito
+    return next();
   }
 
-  // si no es admin, validar que el carrito pertenece al usuario
+
   if (user.cart.toString() !== cartId) {
     return res.status(403).json({ status: 'error', message: 'Forbidden - You do not own this cart' });
   }
@@ -25,84 +25,83 @@ function checkCartOwnership(req, res, next) {
   next();
 }
 
-// Obtener productos del carrito (solo propietario o admin)
+
 router.get('/:cid', checkCartOwnership, async (req, res) => {
   try {
-    const result = await cartService.getProductsFromCartByID(req.params.cid);
+    const result = await cartService.getById(req.params.cid);  
     res.json({ status: 'success', payload: result });
   } catch (error) {
     res.status(400).json({ status: 'error', message: error.message });
   }
 });
 
-// Crear carrito
+
 router.post('/', async (req, res) => {
   try {
-    const result = await cartService.createCart();
+    const result = await cartService.create(); 
     res.json({ status: 'success', payload: result });
   } catch (error) {
     res.status(400).json({ status: 'error', message: error.message });
   }
 });
 
-// Agregar producto al carrito (solo propietario o admin)
+
 router.post('/:cid/product/:pid', checkCartOwnership, async (req, res) => {
   try {
-    const result = await cartService.addProductByID(req.params.cid, req.params.pid);
+    const result = await cartService.addProduct(req.params.cid, req.params.pid); 
     res.json({ status: 'success', payload: result });
   } catch (error) {
     res.status(400).json({ status: 'error', message: error.message });
   }
 });
 
-// Eliminar producto del carrito (solo propietario o admin)
+
 router.delete('/:cid/product/:pid', checkCartOwnership, async (req, res) => {
   try {
-    const result = await cartService.deleteProductByID(req.params.cid, req.params.pid);
+    const result = await cartService.deleteProduct(req.params.cid, req.params.pid); 
     res.json({ status: 'success', payload: result });
   } catch (error) {
     res.status(400).json({ status: 'error', message: error.message });
   }
 });
 
-// Actualizar todos los productos del carrito (solo propietario o admin)
+
 router.put('/:cid', checkCartOwnership, async (req, res) => {
   try {
-    const result = await cartService.updateAllProducts(req.params.cid, req.body.products);
+    const products = req.body.products; 
+    const result = await cartService.updateProducts(req.params.cid, products);
     res.json({ status: 'success', payload: result });
   } catch (error) {
     res.status(400).json({ status: 'error', message: error.message });
   }
 });
 
-// Actualizar cantidad de producto en carrito (solo propietario o admin)
+
 router.put('/:cid/product/:pid', checkCartOwnership, async (req, res) => {
   try {
-    const result = await cartService.updateProductByID(req.params.cid, req.params.pid, req.body.quantity);
+    const quantity = req.body.quantity;
+    const result = await cartService.updateProductQuantity(req.params.cid, req.params.pid, quantity); 
     res.json({ status: 'success', payload: result });
   } catch (error) {
     res.status(400).json({ status: 'error', message: error.message });
   }
 });
 
-// Vaciar carrito (solo propietario o admin)
+
 router.delete('/:cid', checkCartOwnership, async (req, res) => {
   try {
-    const result = await cartService.deleteAllProducts(req.params.cid);
+    const result = await cartService.clearCart(req.params.cid); 
     res.json({ status: 'success', payload: result });
   } catch (error) {
     res.status(400).json({ status: 'error', message: error.message });
   }
 });
 
-// Compra del carrito (solo propietario o admin)
+
 router.post('/:cid/purchase', checkCartOwnership, async (req, res) => {
   try {
-    // req.user contiene info del usuario autenticado
-    const buyerId = req.user._id;
-
-    const result = await cartService.purchaseCart(req.params.cid, buyerId);
-    res.json({ status: 'success', payload: result });
+    const buyerId = req.user._id; 
+    const result = await cartService.purchaseCart(req.params.cid, buyerId); 
   } catch (error) {
     res.status(400).json({ status: 'error', message: error.message });
   }

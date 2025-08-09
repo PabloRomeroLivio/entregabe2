@@ -1,5 +1,5 @@
 import { cartModel } from "./models/cartModel.js";
-import TicketModel from "./models/ticketModel.js"; // Importar modelo Ticket
+import TicketModel from "./models/ticketModel.js"; 
 
 class cartDBManager {
     constructor(productDBManager) {
@@ -91,7 +91,7 @@ class cartDBManager {
         return await this.getCartById(cid);
     }
 
-    // Nuevo método para compra del carrito
+   
     async purchaseCart(cid, buyerId) {
         const cart = await this.getCartById(cid);
         if (!cart) throw new Error(`El carrito ${cid} no existe!`);
@@ -102,7 +102,7 @@ class cartDBManager {
         let totalAmount = 0;
         const productsToBuy = [];
 
-        // Validar stock
+      
         for (const item of cart.products) {
             const product = await this.productDBManager.getProductByID(item.product._id.toString());
 
@@ -134,13 +134,13 @@ class cartDBManager {
             throw new Error('No hay productos disponibles para la compra');
         }
 
-        // Reducir stock y calcular total
+     
         for (const item of productsToBuy) {
             await this.productDBManager.updateStock(item.product._id, item.product.stock - item.quantity);
             totalAmount += item.price * item.quantity;
         }
 
-        // Crear ticket
+      
         const ticket = await TicketModel.create({
             buyer: buyerId,
             products: productsToBuy.map(p => ({
@@ -152,7 +152,7 @@ class cartDBManager {
             purchase_datetime: new Date()
         });
 
-        // Actualizar carrito: eliminar productos comprados
+       
         cart.products = cart.products.filter(item =>
             productsNotPurchased.find(p => p.productId.toString() === item.product._id.toString())
         );

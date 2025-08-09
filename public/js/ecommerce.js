@@ -6,7 +6,6 @@ async function addToCart(pid) {
         let cartId = localStorage.getItem('cartId');
 
         if (!cartId) {
-            // Crear carrito
             const createCartResponse = await fetch('/api/carts', {
                 method: 'POST'
             });
